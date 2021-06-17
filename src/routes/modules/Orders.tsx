@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useHistory } from 'react-router-dom'
 import Box from '@material-ui/core/Box'
 import Grid from '@material-ui/core/Grid'
@@ -86,40 +86,40 @@ const Orders = () => {
   const history = useHistory()
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
-  const [offset, setOffset] = useState(0)
+  // const [offset, setOffset] = useState(0)
   const [open, setOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const [error, setError] = useState('')
 
-  const fetchOrdersAction = async () => {
-    setLoading(true)
-    await dispatch(fetchOrders({ limit: 10, offset: offset }))
-    setLoading(false)
-  }
+  const fetchOrdersAction = useMemo(
+    () => async (currentPage: number) => {
+      setLoading(true)
+      await dispatch(fetchOrders({ limit: 10, offset: (currentPage - 1) * 10 }))
+      setLoading(false)
+    },
+    [dispatch, setLoading]
+  )
 
   useEffect(() => {
     setError('')
-    fetchOrdersAction()
-  }, [page])
+    fetchOrdersAction(page)
+  }, [page, fetchOrdersAction])
 
   const handleChange = (
     event: React.ChangeEvent<unknown>,
     page: number
   ): void => {
-    setOffset((page - 1) * 10)
+    // setOffset((page - 1) * 10)
     setPage(page)
   }
 
   const handleClose = async (value: number) => {
     if (value) {
       try {
-        setLoading(true)
         await orderAPI.deleteOrder(value)
-        await dispatch(fetchOrders({ limit: 10, offset: offset }))
+        fetchOrdersAction(page)
       } catch (error) {
         setError(error.response.data.Message)
-      } finally {
-        setLoading(false)
       }
     }
     setOpen(false)

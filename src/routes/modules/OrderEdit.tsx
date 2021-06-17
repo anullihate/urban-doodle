@@ -30,13 +30,14 @@ const OrderEdit = () => {
   useEffect(() => {
     if (!orders.length) {
       history.push('/orders')
+    } else {
+      setOrder(
+        orders.find(
+          (item: OrderItem) => item.OrderId === parseInt(id)
+        ) as OrderItem
+      )
     }
-    setOrder(
-      orders.find(
-        (item: OrderItem) => item.OrderId === parseInt(id)
-      ) as OrderItem
-    )
-  }, [])
+  }, [orders, id, history])
   const handleClick = async () => {
     try {
       await orderAPI.updateOrder({
